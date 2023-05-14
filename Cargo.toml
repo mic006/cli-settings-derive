@@ -1,0 +1,12 @@
+[package]
+name = "cli-settings-derive"
+version = "0.1.0"
+edition = "2021"
+description = "Manage CLI settings with configuration file(s) and command line parsing, using serde and clap"
+documentation = "https://docs.rs/cli-settings-derive"
+keywords = ["clap", "serde", "derive", "config", "setting"]
+categories = ["command-line-interface"]
+license = "MIT"
+repository = "https://github.com/mic006/cli-settings-derive"
+
+[dependencies]
