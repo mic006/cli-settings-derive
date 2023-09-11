@@ -151,7 +151,10 @@ pub fn cli_settings(
     //let _attr = parse_macro_input!(attr as DeriveInput);
 
     let syn_struct = parse_macro_input!(item as syn::ItemStruct);
-    let ss = SettingStruct::build(&syn_struct).expect("toto"); // TODO error report
+    let ss = match SettingStruct::build(&syn_struct) {
+        Ok(ss) => ss,
+        Err(e) => return e.to_compile_error().into(),
+    };
 
     let main = ss.output_main();
     println!("DBG main: {}", main);
