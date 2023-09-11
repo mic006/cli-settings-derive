@@ -59,7 +59,7 @@ impl<'a> SettingStruct<'a> {
                 ty: &field.ty,
                 opt: false,
             };
-            // TODO update opt; based on what ?? which use case ? avoid optional of optional ????
+            // TODO update opt; based on what ?? which use case ? avoid optional of optional ???? => No: mandatory field for clap for subsommands
             ss.fields.push(f);
         }
 
@@ -69,7 +69,6 @@ impl<'a> SettingStruct<'a> {
     /// Classify a list of attributes, related to file , clap, or other
     fn classify_attributes(attrs: &'a Vec<syn::Attribute>) -> Result<AttrMap<'a>, syn::Error> {
         let mut res: AttrMap = Default::default();
-        //let mut attrs_default = proc_macro2::TokenStream::new();
         for attr in attrs {
             let (path, value) = match &attr.meta {
                 syn::Meta::Path(p) => (Some(p), None),
@@ -101,10 +100,8 @@ impl<'a> SettingStruct<'a> {
                 }
             }
             if !handled_attr {
-                // other attribute, keep as is
-                res.entry("_")
-                    .and_modify(|ts| ts.extend(attr.to_token_stream()))
-                    .or_default();
+                // other attribute (including doc), keep as is
+                res.entry("_").or_default().extend(attr.to_token_stream());
             }
         }
         Ok(res)
