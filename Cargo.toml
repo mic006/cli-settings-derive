@@ -13,6 +13,7 @@ repository = "https://github.com/mic006/cli-settings-derive"
 proc-macro = true
 
 [dependencies]
+let_or_return = "0.1.0"
 proc-macro2 = "1.0.56"
 quote = "1.0.27"
 syn = "2.0.16"
