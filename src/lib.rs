@@ -1,13 +1,13 @@
 use std::str::FromStr;
 
 use let_or_return::let_or_return;
-use proc_macro2::TokenStream;
 use quote::{quote, ToTokens};
 use syn::{parse_macro_input, spanned::Spanned};
 
 /// Map of attributes by category
 /// 'file': config file related attributes
 /// 'clap': command line related attributes
+/// 'doc': doc related attributes
 /// '_': other attributes
 type AttrMap<'a> = std::collections::HashMap<&'a str, proc_macro2::TokenStream>;
 
@@ -81,19 +81,25 @@ impl<'a> SettingStruct<'a> {
                     Some("file")
                 } else if p.is_ident("cli_settings_clap") {
                     Some("clap")
+                } else if p.is_ident("doc") {
+                    handled_attr = true;
+                    res.entry("doc").or_default().extend(attr.to_token_stream());
+                    None
                 } else {
                     None
                 };
                 if let Some(v) = v {
                     handled_attr = true;
                     if value.is_none() {
-                        res.insert(v, proc_macro2::TokenStream::new());
+                        res.entry(v).or_default();
                     } else if let Some(syn::Expr::Lit(syn::ExprLit {
                         attrs: _,
                         lit: syn::Lit::Str(l),
                     })) = value
                     {
-                        res.insert(v, proc_macro2::TokenStream::from_str(l.suffix())?);
+                        res.entry(v)
+                            .or_default()
+                            .extend(proc_macro2::TokenStream::from_str(&l.value())?);
                     } else {
                         return Err(syn::Error::new(attr.span(), "invalid attribute format"));
                     }
@@ -107,37 +113,79 @@ impl<'a> SettingStruct<'a> {
         Ok(res)
     }
 
-    /// Output the main structure   
-    fn output_main(&self) -> proc_macro2::TokenStream {
-        // struct tokens
+    /// Output struct with given selection
+    fn output_struct(
+        &self,
+        prefix: &str,
+        field_filter: Option<&str>,
+        attr_keys: &[&str],
+    ) -> proc_macro2::TokenStream {
         let empty = proc_macro2::TokenStream::new();
-        let attr = self.attrs.get("_").unwrap_or(&empty);
+        let (field_ty_start, field_ty_end) = if prefix.is_empty() {
+            // no prefix, field with configured type
+            (empty.clone(), empty.clone())
+        } else {
+            // prefix, field with Option<configured type>
+            (
+                proc_macro2::TokenStream::from_str("Option<").unwrap(),
+                proc_macro2::TokenStream::from_str(">").unwrap(),
+            )
+        };
+        // struct tokens
+        let attrs = attr_keys
+            .iter()
+            .map(|k| self.attrs.get(k).unwrap_or(&empty))
+            .collect::<Vec<_>>();
         let vis = &self.s.vis;
         let struct_token = &self.s.struct_token;
-        let ident = &self.s.ident;
+        let name = format!("{}{}", prefix, self.s.ident);
+        let ident = syn::Ident::new(&name, self.s.ident.span());
         // all fields tokens
         let fields = self
             .fields
             .iter()
+            .filter(|f| {
+                if let Some(k) = field_filter {
+                    f.attrs.contains_key(k)
+                } else {
+                    true
+                }
+            })
             .map(|f| {
                 // field tokens
-                let field_attr: &TokenStream = f.attrs.get("_").unwrap_or(&empty);
+                let field_attrs = attr_keys
+                    .iter()
+                    .map(|k| f.attrs.get(k).unwrap_or(&empty))
+                    .collect::<Vec<_>>();
                 let field_vis = f.vis;
                 let field_ident = f.ident;
                 let field_ty = f.ty;
                 // output one field (without separator)
                 quote! {
-                    #field_attr #field_vis #field_ident: #field_ty
+                    #(#field_attrs)* #field_vis #field_ident: #field_ty_start #field_ty #field_ty_end
                 }
             })
             .collect::<Vec<_>>();
         // output the whole struct
         quote! {
-            #attr #vis #struct_token #ident
+            #(#attrs)* #vis #struct_token #ident
             {
                 #(#fields),*
             }
         }
+    }
+
+    /// Output the main structure
+    fn output_main_struct(&self) -> proc_macro2::TokenStream {
+        self.output_struct("", None, &["_", "doc"])
+    }
+    /// Output the clap structure
+    fn output_clap_struct(&self) -> proc_macro2::TokenStream {
+        self.output_struct("Clap", Some("clap"), &["doc", "clap"])
+    }
+    /// Output the file structure
+    fn output_file_struct(&self) -> proc_macro2::TokenStream {
+        self.output_struct("File", Some("file"), &["file"])
     }
 }
 
@@ -146,28 +194,25 @@ pub fn cli_settings(
     _attr: proc_macro::TokenStream,
     item: proc_macro::TokenStream,
 ) -> proc_macro::TokenStream {
-    //println!("attr: \"{}\"", attr.to_string());
-    println!("item: \"{}\"", item.to_string());
-    //let _attr = parse_macro_input!(attr as DeriveInput);
-
     let syn_struct = parse_macro_input!(item as syn::ItemStruct);
     let ss = match SettingStruct::build(&syn_struct) {
         Ok(ss) => ss,
         Err(e) => return e.to_compile_error().into(),
     };
 
-    let main = ss.output_main();
-    println!("DBG main: {}", main);
-    main.into()
+    let main_struct = ss.output_main_struct();
+    //println!("DBG main: {}", main_struct);
+    let clap_struct = ss.output_clap_struct();
+    //println!("DBG clap: {}", clap_struct);
+    let file_struct = ss.output_file_struct();
+    //println!("DBG file: {}", file_struct);
 
-    // Debug code
-    //let ts = proc_macro2::TokenStream::from_str("#[serde_as]#[trucmuche]").expect("toto");
-
-    //syn::parse::Parser::parse_str(syn::Attribute::parse_outer, s);
-    //    let toto = syn::parse_str::<syn::Attribute>("#[serde_as]#[derive(Toto)]").expect("toto");
-    /*quote! {
-        #ts
-        #s
+    quote! {
+        #main_struct
+        mod cli_settings_derive {
+            #clap_struct
+            #file_struct
+        }
     }
-    .into()*/
+    .into()
 }
