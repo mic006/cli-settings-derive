@@ -5,25 +5,26 @@ use quote::{quote, ToTokens};
 use syn::{parse_macro_input, spanned::Spanned};
 
 /// Map of attributes by category
-/// 'file': config file related attributes
-/// 'clap': command line related attributes
+/// 'cli_settings_default': default field value
+/// 'cli_settings_file': config file related attributes
+/// 'cli_settings_clap': command line related attributes
 /// 'doc': doc related attributes
 /// '_': other attributes
-type AttrMap<'a> = std::collections::HashMap<&'a str, proc_macro2::TokenStream>;
+type AttrMap = std::collections::HashMap<String, proc_macro2::TokenStream>;
 
 /// Field element, quite similar to syn::Field, keeping only the relevant fields
 struct Field<'a> {
-    attrs: AttrMap<'a>,       // classified attributes of the field
+    attrs: AttrMap,           // classified attributes of the field
     vis: &'a syn::Visibility, // field visibility
     ident: &'a syn::Ident,    // field name
     ty: &'a syn::Type,        // field type
-    opt: bool,                // whether the type shall be converted to Option<ty>
+                              //opt: bool,                // whether the type shall be converted to Option<ty>
 }
 
 /// Container for the whole settings struct
 struct SettingStruct<'a> {
     s: &'a syn::ItemStruct, // associated syn::ItemStruct object
-    attrs: AttrMap<'a>,     // classified attributes of the struct
+    attrs: AttrMap,         // classified attributes of the struct
     fields: Vec<Field<'a>>, // list of fields
 }
 
@@ -57,7 +58,6 @@ impl<'a> SettingStruct<'a> {
                     syn::Error::new(field.span(), "only named fields are supported")
                 })?,
                 ty: &field.ty,
-                opt: false,
             };
             // TODO update opt; based on what ?? which use case ? avoid optional of optional ???? => No: mandatory field for clap for subsommands
             ss.fields.push(f);
@@ -67,7 +67,7 @@ impl<'a> SettingStruct<'a> {
     }
 
     /// Classify a list of attributes, related to file , clap, or other
-    fn classify_attributes(attrs: &'a Vec<syn::Attribute>) -> Result<AttrMap<'a>, syn::Error> {
+    fn classify_attributes(attrs: &'a Vec<syn::Attribute>) -> Result<AttrMap, syn::Error> {
         let mut res: AttrMap = Default::default();
         for attr in attrs {
             let (path, value) = match &attr.meta {
@@ -77,37 +77,36 @@ impl<'a> SettingStruct<'a> {
             };
             let mut handled_attr = false;
             if let Some(p) = path {
-                let v = if p.is_ident("cli_settings_file") {
-                    Some("file")
-                } else if p.is_ident("cli_settings_clap") {
-                    Some("clap")
-                } else if p.is_ident("doc") {
-                    handled_attr = true;
-                    res.entry("doc").or_default().extend(attr.to_token_stream());
-                    None
-                } else {
-                    None
-                };
-                if let Some(v) = v {
-                    handled_attr = true;
-                    if value.is_none() {
-                        res.entry(v).or_default();
-                    } else if let Some(syn::Expr::Lit(syn::ExprLit {
-                        attrs: _,
-                        lit: syn::Lit::Str(l),
-                    })) = value
-                    {
-                        res.entry(v)
+                if let Some(path_ident) = p.get_ident() {
+                    let path_ident_str = path_ident.to_string();
+                    if path_ident_str == "doc" {
+                        handled_attr = true;
+                        res.entry("doc".to_string())
                             .or_default()
-                            .extend(proc_macro2::TokenStream::from_str(&l.value())?);
-                    } else {
-                        return Err(syn::Error::new(attr.span(), "invalid attribute format"));
+                            .extend(attr.to_token_stream());
+                    } else if path_ident_str.starts_with("cli_settings_") {
+                        handled_attr = true;
+                        if value.is_none() {
+                            res.entry(path_ident_str).or_default();
+                        } else if let Some(syn::Expr::Lit(syn::ExprLit {
+                            attrs: _,
+                            lit: syn::Lit::Str(l),
+                        })) = value
+                        {
+                            res.entry(path_ident_str)
+                                .or_default()
+                                .extend(proc_macro2::TokenStream::from_str(&l.value())?);
+                        } else {
+                            return Err(syn::Error::new(attr.span(), "invalid attribute format"));
+                        }
                     }
                 }
             }
             if !handled_attr {
                 // other attribute (including doc), keep as is
-                res.entry("_").or_default().extend(attr.to_token_stream());
+                res.entry("_".to_string())
+                    .or_default()
+                    .extend(attr.to_token_stream());
             }
         }
         Ok(res)
@@ -134,7 +133,7 @@ impl<'a> SettingStruct<'a> {
         // struct tokens
         let attrs = attr_keys
             .iter()
-            .map(|k| self.attrs.get(k).unwrap_or(&empty))
+            .map(|k| self.attrs.get(*k).unwrap_or(&empty))
             .collect::<Vec<_>>();
         let vis = &self.s.vis;
         let struct_token = &self.s.struct_token;
@@ -155,7 +154,7 @@ impl<'a> SettingStruct<'a> {
                 // field tokens
                 let field_attrs = attr_keys
                     .iter()
-                    .map(|k| f.attrs.get(k).unwrap_or(&empty))
+                    .map(|k| f.attrs.get(*k).unwrap_or(&empty))
                     .collect::<Vec<_>>();
                 let field_vis = f.vis;
                 let field_ident = f.ident;
@@ -181,11 +180,15 @@ impl<'a> SettingStruct<'a> {
     }
     /// Output the clap structure
     fn output_clap_struct(&self) -> proc_macro2::TokenStream {
-        self.output_struct("Clap", Some("clap"), &["doc", "clap"])
+        self.output_struct(
+            "Clap",
+            Some("cli_settings_clap"),
+            &["doc", "cli_settings_clap"],
+        )
     }
     /// Output the file structure
     fn output_file_struct(&self) -> proc_macro2::TokenStream {
-        self.output_struct("File", Some("file"), &["file"])
+        self.output_struct("File", Some("cli_settings_file"), &["cli_settings_file"])
     }
 }
 
