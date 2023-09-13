@@ -8,6 +8,15 @@ pub struct Settings {
     /// gamma setting explanation
     pub gamma: u64,
 }
+impl Default for Settings {
+    fn default() -> Self {
+        Self {
+            alpha: Default::default(),
+            beta: "beta default value",
+            gamma: 1 << 63,
+        }
+    }
+}
 mod cli_settings_derive {
     #[command(version, about, long_about = None)]
     pub struct ClapSettings {

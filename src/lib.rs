@@ -190,6 +190,34 @@ impl<'a> SettingStruct<'a> {
     fn output_file_struct(&self) -> proc_macro2::TokenStream {
         self.output_struct("File", Some("cli_settings_file"), &["cli_settings_file"])
     }
+
+    /// Output Default implementation for the main struct
+    fn output_main_struct_default(&self) -> proc_macro2::TokenStream {
+        let default = proc_macro2::TokenStream::from_str("Default::default()").unwrap();
+        let ident = &self.s.ident;
+        let fields = self
+            .fields
+            .iter()
+            .map(|f| {
+                let field_ident = f.ident;
+                let field_default = f.attrs.get("cli_settings_default").unwrap_or(&default);
+                // output one field (without separator)
+                quote! {
+                    #field_ident: #field_default
+                }
+            })
+            .collect::<Vec<_>>();
+        quote! {
+            impl Default for #ident
+            {
+                fn default() -> Self {
+                    Self{
+                        #(#fields),*
+                    }
+                }
+            }
+        }
+    }
 }
 
 #[proc_macro_attribute]
@@ -204,14 +232,15 @@ pub fn cli_settings(
     };
 
     let main_struct = ss.output_main_struct();
-    //println!("DBG main: {}", main_struct);
+    let main_struct_default = ss.output_main_struct_default();
+    //println!("DBG: {}", main_struct_default);
     let clap_struct = ss.output_clap_struct();
-    //println!("DBG clap: {}", clap_struct);
     let file_struct = ss.output_file_struct();
-    //println!("DBG file: {}", file_struct);
 
     quote! {
         #main_struct
+        #main_struct_default
+
         mod cli_settings_derive {
             #clap_struct
             #file_struct
