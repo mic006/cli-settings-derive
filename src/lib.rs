@@ -233,7 +233,7 @@ impl<'a> SettingStruct<'a> {
                     for file in cfg_files {
                         cli_settings_derive::load_file(&file, &mut cfg)?;
                     }
-                    cli_settings_derive::parse_args(&args, &mut cfg)?;
+                    cli_settings_derive::parse_cli_args(&args, &mut cfg)?;
                     Ok(cfg)
                 }
             }
@@ -313,6 +313,24 @@ impl<'a> SettingStruct<'a> {
             }
         }
     }
+
+    /// Output parse_cli_args() function
+    fn output_parse_cli_args(&self) -> proc_macro2::TokenStream {
+        let main_ident = &self.s.ident;
+        let name = format!("Clap{}", self.s.ident);
+        let ident = syn::Ident::new(&name, self.s.ident.span());
+        quote! {
+            fn parse_cli_args<I, T>(args: I, cfg: &mut super::#main_ident) -> anyhow::Result<()>
+            where
+                I: IntoIterator<Item = T>,
+                T: Into<std::ffi::OsString> + Clone,
+            {
+                let cli_args = #ident ::parse_from(args);
+                cli_args.updateg(cfg);
+                Ok(())
+            }
+        }
+    }
 }
 
 #[proc_macro_attribute]
@@ -329,12 +347,12 @@ pub fn cli_settings(
     let main_struct = ss.output_main_struct();
     let main_struct_default = ss.output_main_struct_default();
     let main_struct_build = ss.output_main_struct_build();
-    //println!("DBG: {}", main_struct_build);
     let file_struct = ss.output_file_struct();
     let file_struct_update = ss.output_file_struct_update();
     let load_file = ss.output_load_file();
     let clap_struct = ss.output_clap_struct();
     let clap_struct_update = ss.output_clap_struct_update();
+    let parse_cli_args = ss.output_parse_cli_args();
 
     quote! {
         #main_struct
@@ -349,7 +367,8 @@ pub fn cli_settings(
 
             #clap_struct
             #clap_struct_update
-    //                fn parse_args();
+
+            #parse_cli_args
         }
     }
     .into()

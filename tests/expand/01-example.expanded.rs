@@ -28,7 +28,7 @@ impl Settings {
         for file in cfg_files {
             cli_settings_derive::load_file(&file, &mut cfg)?;
         }
-        cli_settings_derive::parse_args(&args, &mut cfg)?;
+        cli_settings_derive::parse_cli_args(&args, &mut cfg)?;
         Ok(cfg)
     }
 }
@@ -102,5 +102,14 @@ mod cli_settings_derive {
                 cfg.beta = param;
             }
         }
+    }
+    fn parse_cli_args<I, T>(args: I, cfg: &mut super::Settings) -> anyhow::Result<()>
+    where
+        I: IntoIterator<Item = T>,
+        T: Into<std::ffi::OsString> + Clone,
+    {
+        let cli_args = ClapSettings::parse_from(args);
+        cli_args.updateg(cfg);
+        Ok(())
     }
 }
