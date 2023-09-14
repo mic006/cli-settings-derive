@@ -275,6 +275,44 @@ impl<'a> SettingStruct<'a> {
     fn output_clap_struct_update(&self) -> proc_macro2::TokenStream {
         self.output_struct_update("Clap", "cli_settings_clap")
     }
+
+    /// Output load_file() function
+    fn output_load_file(&self) -> proc_macro2::TokenStream {
+        let main_ident = &self.s.ident;
+        let name = format!("File{}", self.s.ident);
+        let ident = syn::Ident::new(&name, self.s.ident.span());
+        quote! {
+            fn load_file(path: &std::path::Path, cfg: &mut super::#main_ident) -> anyhow::Result<()> {
+                // access file
+                let file = std::fs::File::open(path);
+                if let Err(err) = file {
+                    if err.kind() == std::io::ErrorKind::NotFound {
+                        // file not found is not a problem...
+                        return Ok(());
+                    }
+                    // ... but everything else is -> propagate error
+                    return Err(err).context(format!(
+                        "Failed to open the configuration file '{}'",
+                        path.display()
+                    ));
+                }
+                let file = file.unwrap();
+
+                // get parsed content
+                let file_config: #ident = serde_yaml::from_reader(file).with_context(|| {
+                    format!(
+                        "Failed to parse the configuration file '{}'",
+                        path.display()
+                    )
+                })?;
+
+                // update config with content from the file
+                file_config.update(cfg);
+
+                Ok(())
+            }
+        }
+    }
 }
 
 #[proc_macro_attribute]
@@ -294,6 +332,7 @@ pub fn cli_settings(
     //println!("DBG: {}", main_struct_build);
     let file_struct = ss.output_file_struct();
     let file_struct_update = ss.output_file_struct_update();
+    let load_file = ss.output_load_file();
     let clap_struct = ss.output_clap_struct();
     let clap_struct_update = ss.output_clap_struct_update();
 
@@ -305,7 +344,8 @@ pub fn cli_settings(
         mod cli_settings_derive {
             #file_struct
             #file_struct_update
-    //                fn load_file();
+
+            #load_file
 
             #clap_struct
             #clap_struct_update

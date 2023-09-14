@@ -48,6 +48,42 @@ mod cli_settings_derive {
             }
         }
     }
+    fn load_file(
+        path: &std::path::Path,
+        cfg: &mut super::Settings,
+    ) -> anyhow::Result<()> {
+        let file = std::fs::File::open(path);
+        if let Err(err) = file {
+            if err.kind() == std::io::ErrorKind::NotFound {
+                return Ok(());
+            }
+            return Err(err)
+                .context({
+                    let res = ::alloc::fmt::format(
+                        format_args!(
+                            "Failed to open the configuration file \'{0}\'", path
+                            .display(),
+                        ),
+                    );
+                    res
+                });
+        }
+        let file = file.unwrap();
+        let file_config: FileSettings = serde_yaml::from_reader(file)
+            .with_context(|| {
+                {
+                    let res = ::alloc::fmt::format(
+                        format_args!(
+                            "Failed to parse the configuration file \'{0}\'", path
+                            .display(),
+                        ),
+                    );
+                    res
+                }
+            })?;
+        file_config.update(cfg);
+        Ok(())
+    }
     #[command(version, about, long_about = None)]
     pub struct ClapSettings {
         /// alpha setting explanation
