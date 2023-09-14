@@ -178,6 +178,10 @@ impl<'a> SettingStruct<'a> {
     fn output_main_struct(&self) -> proc_macro2::TokenStream {
         self.output_struct("", None, &["_", "doc"])
     }
+    /// Output the file structure
+    fn output_file_struct(&self) -> proc_macro2::TokenStream {
+        self.output_struct("File", Some("cli_settings_file"), &["cli_settings_file"])
+    }
     /// Output the clap structure
     fn output_clap_struct(&self) -> proc_macro2::TokenStream {
         self.output_struct(
@@ -185,10 +189,6 @@ impl<'a> SettingStruct<'a> {
             Some("cli_settings_clap"),
             &["doc", "cli_settings_clap"],
         )
-    }
-    /// Output the file structure
-    fn output_file_struct(&self) -> proc_macro2::TokenStream {
-        self.output_struct("File", Some("cli_settings_file"), &["cli_settings_file"])
     }
 
     /// Output Default implementation for the main struct
@@ -208,12 +208,33 @@ impl<'a> SettingStruct<'a> {
             })
             .collect::<Vec<_>>();
         quote! {
-            impl Default for #ident
-            {
+            impl Default for #ident {
                 fn default() -> Self {
                     Self{
                         #(#fields),*
                     }
+                }
+            }
+        }
+    }
+
+    /// Output build() implementation for the main struct
+    fn output_main_struct_build(&self) -> proc_macro2::TokenStream {
+        let ident = &self.s.ident;
+        quote! {
+            impl #ident {
+                pub fn build<F, I, T>(cfg_files: F, args: I) -> anyhow::Result<Self>
+                where
+                    F: IntoIterator<Item = std::path::PathBuf>,
+                    I: IntoIterator<Item = T>,
+                    T: Into<std::ffi::OsString> + Clone,
+                {
+                    let mut cfg = Self::default();
+                    for file in cfg_files {
+                        cli_settings_derive::load_file(&file, &mut cfg)?;
+                    }
+                    cli_settings_derive::parse_args(&args, &mut cfg)?;
+                    Ok(cfg)
                 }
             }
         }
@@ -233,18 +254,31 @@ pub fn cli_settings(
 
     let main_struct = ss.output_main_struct();
     let main_struct_default = ss.output_main_struct_default();
-    //println!("DBG: {}", main_struct_default);
-    let clap_struct = ss.output_clap_struct();
+    let main_struct_build = ss.output_main_struct_build();
+    println!("DBG: {}", main_struct_build);
     let file_struct = ss.output_file_struct();
+    let clap_struct = ss.output_clap_struct();
 
     quote! {
-        #main_struct
-        #main_struct_default
+            #main_struct
+            #main_struct_default
+            #main_struct_build
 
-        mod cli_settings_derive {
-            #clap_struct
-            #file_struct
+            mod cli_settings_derive {
+                #file_struct
+
+    /*             impl file_struct {
+                    fn update_config();
+                }
+                fn load_file();*/
+
+                #clap_struct
+
+    /*             impl clap_struct {
+                    fn update_config();
+                }
+                fn parse_args();*/
+            }
         }
-    }
     .into()
 }
