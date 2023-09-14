@@ -239,6 +239,42 @@ impl<'a> SettingStruct<'a> {
             }
         }
     }
+
+    /// Output update() implementation for the file struct
+    fn output_struct_update(&self, prefix: &str, field_filter: &str) -> proc_macro2::TokenStream {
+        let main_ident = &self.s.ident;
+        let name = format!("{}{}", prefix, self.s.ident);
+        let ident = syn::Ident::new(&name, self.s.ident.span());
+        let fields = self
+            .fields
+            .iter()
+            .filter(|f| f.attrs.contains_key(field_filter))
+            .map(|f| {
+                let field_ident = f.ident;
+                // output one field (without separator)
+                quote! {
+                    if let Some(param) = self.#field_ident {
+                        cfg.#field_ident = param;
+                    }
+                }
+            })
+            .collect::<Vec<_>>();
+        quote! {
+            impl #ident {
+                fn update(self, cfg: &mut super::#main_ident) -> Self {
+                    #(#fields)*
+                }
+            }
+        }
+    }
+    /// Output the file struct update()
+    fn output_file_struct_update(&self) -> proc_macro2::TokenStream {
+        self.output_struct_update("File", "cli_settings_file")
+    }
+    /// Output the clap struct update()
+    fn output_clap_struct_update(&self) -> proc_macro2::TokenStream {
+        self.output_struct_update("Clap", "cli_settings_clap")
+    }
 }
 
 #[proc_macro_attribute]
@@ -255,30 +291,26 @@ pub fn cli_settings(
     let main_struct = ss.output_main_struct();
     let main_struct_default = ss.output_main_struct_default();
     let main_struct_build = ss.output_main_struct_build();
-    println!("DBG: {}", main_struct_build);
+    //println!("DBG: {}", main_struct_build);
     let file_struct = ss.output_file_struct();
+    let file_struct_update = ss.output_file_struct_update();
     let clap_struct = ss.output_clap_struct();
+    let clap_struct_update = ss.output_clap_struct_update();
 
     quote! {
-            #main_struct
-            #main_struct_default
-            #main_struct_build
+        #main_struct
+        #main_struct_default
+        #main_struct_build
 
-            mod cli_settings_derive {
-                #file_struct
+        mod cli_settings_derive {
+            #file_struct
+            #file_struct_update
+    //                fn load_file();
 
-    /*             impl file_struct {
-                    fn update_config();
-                }
-                fn load_file();*/
-
-                #clap_struct
-
-    /*             impl clap_struct {
-                    fn update_config();
-                }
-                fn parse_args();*/
-            }
+            #clap_struct
+            #clap_struct_update
+    //                fn parse_args();
         }
+    }
     .into()
 }
