@@ -12,7 +12,7 @@ impl Default for Settings {
     fn default() -> Self {
         Self {
             alpha: Default::default(),
-            beta: "beta default value",
+            beta: "beta default value".to_string(),
             gamma: 1 << 63,
         }
     }
@@ -26,20 +26,22 @@ impl Settings {
     {
         let mut cfg = Self::default();
         for file in cfg_files {
-            cli_settings_derive::load_file(&file, &mut cfg)?;
+            _cli_settings_derive::load_file(&file, &mut cfg)?;
         }
-        cli_settings_derive::parse_cli_args(&args, &mut cfg)?;
+        _cli_settings_derive::parse_cli_args(args, &mut cfg)?;
         Ok(cfg)
     }
 }
-mod cli_settings_derive {
-    #[serde_as]
+mod _cli_settings_derive {
+    use anyhow::Context;
+    use clap::Parser;
+    #[serde_with::serde_as]
     pub struct FileSettings {
         pub alpha: Option<u32>,
         pub gamma: Option<u64>,
     }
     impl FileSettings {
-        fn update(self, cfg: &mut super::Settings) -> Self {
+        fn update(self, cfg: &mut super::Settings) {
             if let Some(param) = self.alpha {
                 cfg.alpha = param;
             }
@@ -48,7 +50,7 @@ mod cli_settings_derive {
             }
         }
     }
-    fn load_file(
+    pub fn load_file(
         path: &std::path::Path,
         cfg: &mut super::Settings,
     ) -> anyhow::Result<()> {
@@ -94,7 +96,7 @@ mod cli_settings_derive {
         pub beta: Option<String>,
     }
     impl ClapSettings {
-        fn update(self, cfg: &mut super::Settings) -> Self {
+        fn update(self, cfg: &mut super::Settings) {
             if let Some(param) = self.alpha {
                 cfg.alpha = param;
             }
@@ -103,13 +105,13 @@ mod cli_settings_derive {
             }
         }
     }
-    fn parse_cli_args<I, T>(args: I, cfg: &mut super::Settings) -> anyhow::Result<()>
+    pub fn parse_cli_args<I, T>(args: I, cfg: &mut super::Settings) -> anyhow::Result<()>
     where
         I: IntoIterator<Item = T>,
         T: Into<std::ffi::OsString> + Clone,
     {
         let cli_args = ClapSettings::parse_from(args);
-        cli_args.updateg(cfg);
+        cli_args.update(cfg);
         Ok(())
     }
 }

@@ -1,7 +1,7 @@
 #[macro_use]
 extern crate cli_settings_derive;
 
-//#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug)]
 #[cli_settings]
 #[cli_settings_file = "#[serde_with::serde_as]#[derive(serde::Deserialize)]"]
 #[cli_settings_clap = "#[derive(clap::Parser)]#[command(version, about, long_about = None)]"]
@@ -20,4 +20,14 @@ pub struct Settings {
     #[cli_settings_default = "1 << 63"]
     #[cli_settings_file]
     pub gamma: u64,
+}
+
+#[test]
+pub fn default() {
+    let expected = Settings {
+        alpha: 0,
+        beta: "beta default value".to_string(),
+        gamma: 1 << 63,
+    };
+    assert_eq!(Settings::default(), expected);
 }

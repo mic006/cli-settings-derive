@@ -231,9 +231,9 @@ impl<'a> SettingStruct<'a> {
                 {
                     let mut cfg = Self::default();
                     for file in cfg_files {
-                        cli_settings_derive::load_file(&file, &mut cfg)?;
+                        _cli_settings_derive::load_file(&file, &mut cfg)?;
                     }
-                    cli_settings_derive::parse_cli_args(&args, &mut cfg)?;
+                    _cli_settings_derive::parse_cli_args(args, &mut cfg)?;
                     Ok(cfg)
                 }
             }
@@ -261,7 +261,7 @@ impl<'a> SettingStruct<'a> {
             .collect::<Vec<_>>();
         quote! {
             impl #ident {
-                fn update(self, cfg: &mut super::#main_ident) -> Self {
+                fn update(self, cfg: &mut super::#main_ident) {
                     #(#fields)*
                 }
             }
@@ -282,7 +282,7 @@ impl<'a> SettingStruct<'a> {
         let name = format!("File{}", self.s.ident);
         let ident = syn::Ident::new(&name, self.s.ident.span());
         quote! {
-            fn load_file(path: &std::path::Path, cfg: &mut super::#main_ident) -> anyhow::Result<()> {
+            pub fn load_file(path: &std::path::Path, cfg: &mut super::#main_ident) -> anyhow::Result<()> {
                 // access file
                 let file = std::fs::File::open(path);
                 if let Err(err) = file {
@@ -320,13 +320,13 @@ impl<'a> SettingStruct<'a> {
         let name = format!("Clap{}", self.s.ident);
         let ident = syn::Ident::new(&name, self.s.ident.span());
         quote! {
-            fn parse_cli_args<I, T>(args: I, cfg: &mut super::#main_ident) -> anyhow::Result<()>
+            pub fn parse_cli_args<I, T>(args: I, cfg: &mut super::#main_ident) -> anyhow::Result<()>
             where
                 I: IntoIterator<Item = T>,
                 T: Into<std::ffi::OsString> + Clone,
             {
                 let cli_args = #ident ::parse_from(args);
-                cli_args.updateg(cfg);
+                cli_args.update(cfg);
                 Ok(())
             }
         }
@@ -359,7 +359,10 @@ pub fn cli_settings(
         #main_struct_default
         #main_struct_build
 
-        mod cli_settings_derive {
+        mod _cli_settings_derive {
+            use anyhow::Context;
+            use clap::Parser;
+
             #file_struct
             #file_struct_update
 
