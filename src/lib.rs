@@ -1,3 +1,5 @@
+//! Manage CLI settings via config files and command line parsing.
+
 use std::str::FromStr;
 
 use let_or_return::let_or_return;
@@ -371,7 +373,7 @@ impl<'a> SettingStruct<'a> {
 ///
 /// #[cli_settings]
 /// #[cli_settings_file = "#[serde_with::serde_as]#[derive(serde::Deserialize)]"]
-/// #[cli_settings_clap = "#[derive(clap::Parser)]#[command(version, about, long_about = None)]"]
+/// #[cli_settings_clap = "#[derive(clap::Parser)]#[command(version, about)]"]
 /// pub struct Settings {
 ///     /// alpha setting explanation
 ///     #[cli_settings_file]

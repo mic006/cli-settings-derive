@@ -86,7 +86,7 @@ mod _cli_settings_derive {
         file_config.update(cfg);
         Ok(())
     }
-    #[command(version, about, long_about = None)]
+    #[command(version, about)]
     pub struct ClapSettings {
         /// alpha setting explanation
         #[arg(long)]
