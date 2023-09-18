@@ -14,15 +14,15 @@ proc-macro = true
 
 [dependencies]
 anyhow = "1.0.75"
-clap = { version = "4.4.3", features = ["derive"] }
-let_or_return = "0.1.0"
+clap = { version = "4.4.4", features = ["derive"] }
+let_or_return = "1.0.1"
 proc-macro2 = "1.0.67"
 quote = "1.0.33"
 serde = { version = "1.0.188", features = ["derive"] }
 serde_with = "3.3.0"
 serde_yaml = "0.9.25"
-syn = "2.0.33"
+syn = "2.0.37"
 
 [dev-dependencies]
 macrotest = "1.0.9"
-syn = { version = "2.0.33", features = ["full", "extra-traits"] }
+syn = { version = "2.0.37", features = ["full", "extra-traits"] }
