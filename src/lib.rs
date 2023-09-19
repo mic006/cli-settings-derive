@@ -402,6 +402,11 @@ impl<'a> SettingStruct<'a> {
 ///     ).unwrap();
 /// }
 /// ```
+///
+/// A more complex example is available in the [crate repository](https://github.com/mic006/cli-settings-derive/blob/main/examples/example.rs), with:
+/// - clap settings to tune the generated help message (-h)
+/// - field with custom type and user provided function to parse the value from string
+///
 #[proc_macro_attribute]
 pub fn cli_settings(
     _attr: proc_macro::TokenStream,
