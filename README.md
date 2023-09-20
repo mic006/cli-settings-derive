@@ -19,3 +19,7 @@ cli-settings-derive can be seen as a top layer above
 - [clap](https://docs.rs/clap) for the command line parsing
 
 See [doc.rs documentation](https://docs.rs/cli-settings-derive) for detailed documentation and an example.
+
+See the [crate repository](https://github.com/mic006/cli-settings-derive/blob/main/examples/example.rs) for a complete working example, with:
+- clap settings to tune the generated help message (-h)
+- field with custom type and user provided function to parse the value from string
