@@ -38,6 +38,7 @@ impl Settings {
 mod _cli_settings_derive {
     use anyhow::Context;
     use clap::Parser;
+    use super::*;
     #[serde_with::serde_as]
     pub struct FileSettings {
         pub alpha: Option<u32>,

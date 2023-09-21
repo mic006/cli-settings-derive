@@ -436,6 +436,7 @@ pub fn cli_settings(
         mod _cli_settings_derive {
             use anyhow::Context;
             use clap::Parser;
+            use super::*;
 
             #file_struct
             #file_struct_update

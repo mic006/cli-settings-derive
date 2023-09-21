@@ -1,10 +1,9 @@
 //! Example of cli_settings usage.
 
 use cli_settings_derive::cli_settings;
-use serde_with::DeserializeFromStr;
 
 /// Type for custom field, with custom parsing
-#[derive(Default, PartialEq, Debug, Clone, DeserializeFromStr)]
+#[derive(Default, PartialEq, Debug, Clone, serde_with::DeserializeFromStr)]
 pub struct MemSize {
     pub nb: u64,
 }
@@ -66,7 +65,7 @@ pub struct Settings {
     #[cli_settings_default = "\"4k\".parse().expect(\"constant\")"]
     #[cli_settings_file]
     #[cli_settings_clap = "#[arg(short, long, value_name=\"SIZE\")]"]
-    pub buffer_size: crate::MemSize,
+    pub buffer_size: MemSize,
 
     /// alpha setting explanation
     #[cli_settings_file]
