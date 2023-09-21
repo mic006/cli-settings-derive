@@ -1,5 +1,8 @@
 #[macro_use]
 extern crate cli_settings_derive;
+/// Application summary (visible with -h)
+///
+/// Application long description (visible with --help)
 pub struct Settings {
     /// alpha setting explanation
     pub alpha: u32,
@@ -7,6 +10,8 @@ pub struct Settings {
     pub beta: String,
     /// gamma setting explanation
     pub gamma: u64,
+    /// mandatory argument
+    pub path: std::path::PathBuf,
 }
 impl Default for Settings {
     fn default() -> Self {
@@ -14,6 +19,7 @@ impl Default for Settings {
             alpha: Default::default(),
             beta: "beta default value".to_string(),
             gamma: 1 << 63,
+            path: Default::default(),
         }
     }
 }
@@ -35,6 +41,7 @@ impl Settings {
 mod _cli_settings_derive {
     use anyhow::Context;
     use clap::Parser;
+    use super::*;
     #[serde_with::serde_as]
     pub struct FileSettings {
         pub alpha: Option<u32>,
@@ -86,7 +93,10 @@ mod _cli_settings_derive {
         file_config.update(cfg);
         Ok(())
     }
-    #[command(version, about)]
+    /// Application summary (visible with -h)
+    ///
+    /// Application long description (visible with --help)
+    #[command(version)]
     pub struct ClapSettings {
         /// alpha setting explanation
         #[arg(long)]
@@ -94,6 +104,8 @@ mod _cli_settings_derive {
         /// beta setting explanation
         #[arg(short, long)]
         pub beta: Option<String>,
+        /// mandatory argument
+        pub path: std::path::PathBuf,
     }
     impl ClapSettings {
         fn update(self, cfg: &mut super::Settings) {
@@ -103,6 +115,7 @@ mod _cli_settings_derive {
             if let Some(param) = self.beta {
                 cfg.beta = param;
             }
+            cfg.path = self.path;
         }
     }
     pub fn parse_cli_args<I, T>(args: I, cfg: &mut super::Settings) -> anyhow::Result<()>

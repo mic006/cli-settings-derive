@@ -6,7 +6,7 @@ extern crate cli_settings_derive;
 #[derive(PartialEq, Debug)]
 #[cli_settings]
 #[cli_settings_file = "#[serde_with::serde_as]#[derive(serde::Deserialize)]"]
-#[cli_settings_clap = "#[derive(clap::Parser)]#[command(version, about)]"]
+#[cli_settings_clap = "#[derive(clap::Parser)]#[command(version)]"]
 pub struct Settings {
     /// alpha setting explanation
     #[cli_settings_file]
