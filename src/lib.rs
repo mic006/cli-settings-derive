@@ -10,6 +10,7 @@ use syn::{parse_macro_input, spanned::Spanned};
 /// 'cli_settings_default': default field value
 /// 'cli_settings_file': config file related attributes
 /// 'cli_settings_clap': command line related attributes
+/// 'cli_settings_mandatory': indicate a mandatory CLI argument (presence/absence only, no associated value)
 /// 'doc': doc related attributes
 /// '_': other attributes
 type AttrMap = std::collections::HashMap<String, proc_macro2::TokenStream>;
@@ -20,7 +21,7 @@ struct Field<'a> {
     vis: &'a syn::Visibility, // field visibility
     ident: &'a syn::Ident,    // field name
     ty: &'a syn::Type,        // field type
-                              //opt: bool,                // whether the type shall be converted to Option<ty>
+    opt: bool,                // whether the type shall be converted to Option<ty>
 }
 
 /// Container for the whole settings struct
@@ -53,15 +54,16 @@ impl<'a> SettingStruct<'a> {
         // fields
         ss.fields.reserve_exact(fields.named.len());
         for field in &fields.named {
-            let f = Field {
+            let mut f = Field {
                 attrs: Self::classify_attributes(&field.attrs)?,
                 vis: &field.vis,
                 ident: field.ident.as_ref().ok_or_else(|| {
                     syn::Error::new(field.span(), "only named fields are supported")
                 })?,
                 ty: &field.ty,
+                opt: false,
             };
-            // TODO update opt; based on what ?? which use case ? avoid optional of optional ???? => No: mandatory field for clap for subsommands
+            f.opt = f.attrs.get("cli_settings_mandatory").is_none();
             ss.fields.push(f);
         }
 
@@ -122,17 +124,6 @@ impl<'a> SettingStruct<'a> {
         attr_keys: &[&str],
     ) -> proc_macro2::TokenStream {
         let empty = proc_macro2::TokenStream::new();
-        let (field_ty_start, field_ty_end) = if prefix.is_empty() {
-            // no prefix, field with configured type
-            (empty.clone(), empty.clone())
-        } else {
-            // prefix, field with Option<configured type>
-            (
-                proc_macro2::TokenStream::from_str("Option<").unwrap(),
-                proc_macro2::TokenStream::from_str(">").unwrap(),
-            )
-        };
-        // struct tokens
         let attrs = attr_keys
             .iter()
             .map(|k| self.attrs.get(*k).unwrap_or(&empty))
@@ -161,7 +152,18 @@ impl<'a> SettingStruct<'a> {
                 let field_vis = f.vis;
                 let field_ident = f.ident;
                 let field_ty = f.ty;
-                // output one field (without separator)
+                let (field_ty_start, field_ty_end) = if prefix.is_empty() || !f.opt {
+                    // no prefix, field with configured type
+                    (empty.clone(), empty.clone())
+                } else {
+                    // prefix, field with Option<configured type>
+                    (
+                        proc_macro2::TokenStream::from_str("Option<").unwrap(),
+                        proc_macro2::TokenStream::from_str(">").unwrap(),
+                    )
+                };
+                // struct tokens
+                        // output one field (without separator)
                 quote! {
                     #(#field_attrs)* #field_vis #field_ident: #field_ty_start #field_ty #field_ty_end
                 }
@@ -254,9 +256,15 @@ impl<'a> SettingStruct<'a> {
             .map(|f| {
                 let field_ident = f.ident;
                 // output one field (without separator)
-                quote! {
-                    if let Some(param) = self.#field_ident {
-                        cfg.#field_ident = param;
+                if f.opt {
+                    quote! {
+                        if let Some(param) = self.#field_ident {
+                            cfg.#field_ident = param;
+                        }
+                    }
+                } else {
+                    quote! {
+                        cfg.#field_ident = self.#field_ident;
                     }
                 }
             })
@@ -366,6 +374,17 @@ impl<'a> SettingStruct<'a> {
 /// - In your application code, call the Settings::build() method with the list of config files to read
 ///   and the command line arguments to get your application configuration.
 ///
+/// ### Clap mandatory arguments
+///
+/// Clap mandatory arguments shall get the extra annotation `#[cli_settings_mandatory]`.
+/// The field type shall implement Default or a default value shall be provided with `#[cli_settings_default = "xxx"]`.
+/// This default value will never been used by the application as clap will terminate with error
+/// if the argument is not provided, but is needed for the struct instantiation.
+///
+/// ### Clap subcommands
+///
+/// Clap subcommands are supported as mandatory arguments, as shown in the example from the repository.
+///
 /// ## Example
 ///
 /// ```
@@ -406,6 +425,7 @@ impl<'a> SettingStruct<'a> {
 /// A more complex example is available in the [crate repository](https://github.com/mic006/cli-settings-derive/blob/main/examples/example.rs), with:
 /// - clap settings to tune the generated help message (-h)
 /// - field with custom type and user provided function to parse the value from string
+/// - clap subcommands
 ///
 #[proc_macro_attribute]
 pub fn cli_settings(

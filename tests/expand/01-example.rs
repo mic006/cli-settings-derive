@@ -22,4 +22,9 @@ pub struct Settings {
     #[cli_settings_default = "1 << 63"]
     #[cli_settings_file]
     pub gamma: u64,
+
+    /// mandatory argument
+    #[cli_settings_mandatory]
+    #[cli_settings_clap]
+    pub path: std::path::PathBuf,
 }

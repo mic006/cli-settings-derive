@@ -81,6 +81,23 @@ pub struct Settings {
     #[cli_settings_default = "1 << 63"]
     #[cli_settings_file]
     pub gamma: u64,
+
+    #[cli_settings_mandatory]
+    #[cli_settings_default = "CliCommand::Show"]
+    #[cli_settings_clap = "#[command(subcommand)]"]
+    pub command: CliCommand,
+}
+
+#[derive(clap::Subcommand, Debug)]
+pub enum CliCommand {
+    /// Show current configuration
+    ///
+    /// Show the configuration that will be applied
+    Show,
+    /// Load some file (fake)
+    ///
+    /// Some detailed explanation, displayed via `example help load`
+    Load { file: std::path::PathBuf },
 }
 
 fn main() -> anyhow::Result<()> {

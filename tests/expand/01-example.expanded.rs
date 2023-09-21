@@ -10,6 +10,8 @@ pub struct Settings {
     pub beta: String,
     /// gamma setting explanation
     pub gamma: u64,
+    /// mandatory argument
+    pub path: std::path::PathBuf,
 }
 impl Default for Settings {
     fn default() -> Self {
@@ -17,6 +19,7 @@ impl Default for Settings {
             alpha: Default::default(),
             beta: "beta default value".to_string(),
             gamma: 1 << 63,
+            path: Default::default(),
         }
     }
 }
@@ -101,6 +104,8 @@ mod _cli_settings_derive {
         /// beta setting explanation
         #[arg(short, long)]
         pub beta: Option<String>,
+        /// mandatory argument
+        pub path: std::path::PathBuf,
     }
     impl ClapSettings {
         fn update(self, cfg: &mut super::Settings) {
@@ -110,6 +115,7 @@ mod _cli_settings_derive {
             if let Some(param) = self.beta {
                 cfg.beta = param;
             }
+            cfg.path = self.path;
         }
     }
     pub fn parse_cli_args<I, T>(args: I, cfg: &mut super::Settings) -> anyhow::Result<()>
