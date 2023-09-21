@@ -1,5 +1,8 @@
 #[macro_use]
 extern crate cli_settings_derive;
+/// Application summary (visible with -h)
+///
+/// Application long description (visible with --help)
 pub struct Settings {
     /// alpha setting explanation
     pub alpha: u32,
@@ -86,7 +89,10 @@ mod _cli_settings_derive {
         file_config.update(cfg);
         Ok(())
     }
-    #[command(version, about)]
+    /// Application summary (visible with -h)
+    ///
+    /// Application long description (visible with --help)
+    #[command(version)]
     pub struct ClapSettings {
         /// alpha setting explanation
         #[arg(long)]

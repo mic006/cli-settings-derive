@@ -1,10 +1,12 @@
 #[macro_use]
 extern crate cli_settings_derive;
 
-//#[derive(PartialEq, Debug)]
+/// Application summary (visible with -h)
+///
+/// Application long description (visible with --help)
 #[cli_settings]
 #[cli_settings_file = "#[serde_with::serde_as]#[derive(serde::Deserialize)]"]
-#[cli_settings_clap = "#[derive(clap::Parser)]#[command(version, about)]"]
+#[cli_settings_clap = "#[derive(clap::Parser)]#[command(version)]"]
 pub struct Settings {
     /// alpha setting explanation
     #[cli_settings_file]
