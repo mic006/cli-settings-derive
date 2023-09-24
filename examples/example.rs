@@ -52,6 +52,16 @@ impl std::str::FromStr for MemSize {
     }
 }
 
+/// User defined enum
+#[derive(clap::ValueEnum, serde::Deserialize, Clone, Debug)]
+#[serde(rename_all = "lowercase")]
+pub enum Planet {
+    Mercury,
+    Venus,
+    Earth,
+    Mars,
+}
+
 /// Example application for cli_settings
 ///
 /// Load configuration files 'example1.yml' and 'example2.yml' from the current folder,
@@ -81,6 +91,12 @@ pub struct Settings {
     #[cli_settings_default = "1 << 63"]
     #[cli_settings_file]
     pub gamma: u64,
+
+    /// choose home planet
+    #[cli_settings_default = "Planet::Earth"]
+    #[cli_settings_clap = "#[arg(short, long)]"]
+    #[cli_settings_file]
+    pub planet: Planet,
 
     #[cli_settings_mandatory]
     #[cli_settings_default = "CliCommand::Show"]

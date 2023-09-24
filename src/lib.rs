@@ -374,6 +374,12 @@ impl<'a> SettingStruct<'a> {
 /// - In your application code, call the Settings::build() method with the list of config files to read
 ///   and the command line arguments to get your application configuration.
 ///
+/// ### Enumerations
+///
+/// A custom enum can be used in the configuration struct. Add the following annotation to the enum declaration:
+/// - `#[derive(clap::ValueEnum, Clone, Debug)]` for command line argument parsing
+/// - `#[derive(serde::Deserialize)]#[serde(rename_all = "lowercase")]` for config file parsing
+///
 /// ### Clap mandatory arguments
 ///
 /// Clap mandatory arguments shall get the extra annotation `#[cli_settings_mandatory]`.
@@ -392,7 +398,7 @@ impl<'a> SettingStruct<'a> {
 ///
 /// #[cli_settings]
 /// #[cli_settings_file = "#[serde_with::serde_as]#[derive(serde::Deserialize)]"]
-/// #[cli_settings_clap = "#[derive(clap::Parser)]#[command(version, about)]"]
+/// #[cli_settings_clap = "#[derive(clap::Parser)]#[command(version)]"]
 /// pub struct Settings {
 ///     /// alpha setting explanation
 ///     #[cli_settings_file]
@@ -425,6 +431,7 @@ impl<'a> SettingStruct<'a> {
 /// A more complex example is available in the [crate repository](https://github.com/mic006/cli-settings-derive/blob/main/examples/example.rs), with:
 /// - clap settings to tune the generated help message (-h)
 /// - field with custom type and user provided function to parse the value from string
+/// - enumeration fields
 /// - clap subcommands
 ///
 #[proc_macro_attribute]
