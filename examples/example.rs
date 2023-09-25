@@ -62,6 +62,21 @@ pub enum Planet {
     Mars,
 }
 
+/// External enum parsing
+fn parse_log_level(input: &str) -> Result<log::LevelFilter, &'static str> {
+    match input.to_lowercase().as_str() {
+        "off" => Ok(log::LevelFilter::Off),
+        "error" => Ok(log::LevelFilter::Error),
+        "warn" => Ok(log::LevelFilter::Warn),
+        "info" => Ok(log::LevelFilter::Info),
+        "debug" => Ok(log::LevelFilter::Debug),
+        "trace" => Ok(log::LevelFilter::Trace),
+        _ => {
+            Err("expecting log level value [possible values: off, error, warn, info, debug, trace]")
+        }
+    }
+}
+
 /// Example application for cli_settings
 ///
 /// Load configuration files 'example1.yml' and 'example2.yml' from the current folder,
@@ -97,6 +112,12 @@ pub struct Settings {
     #[cli_settings_clap = "#[arg(short, long, global = true)]"]
     #[cli_settings_file]
     pub planet: Planet,
+
+    /// minimum logging level to output
+    #[cli_settings_default = "log::LevelFilter::Info"]
+    #[cli_settings_clap = "#[arg(short, long, value_parser = parse_log_level, value_name=\"LEVEL\", global = true)]"]
+    #[cli_settings_file = "#[serde_as(as = \"Option<serde_with::DisplayFromStr>\")]"]
+    pub log: log::LevelFilter,
 
     #[cli_settings_mandatory]
     #[cli_settings_default = "CliCommand::Show"]

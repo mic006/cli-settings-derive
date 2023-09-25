@@ -24,5 +24,6 @@ serde_yaml = "0.9.25"
 syn = "2.0.37"
 
 [dev-dependencies]
+log = "0.4.20"
 macrotest = "1.0.9"
 syn = { version = "2.0.37", features = ["full", "extra-traits"] }
