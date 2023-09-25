@@ -391,6 +391,9 @@ impl<'a> SettingStruct<'a> {
 ///
 /// Clap subcommands are supported as mandatory arguments, as shown in the example from the repository.
 ///
+/// Note: set `global = true` for fields of the first level parameters that apply to all subcommands,
+/// so that parameters can be passed before and after the subcommand.
+///
 /// ## Example
 ///
 /// ```

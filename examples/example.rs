@@ -74,7 +74,7 @@ pub struct Settings {
     /// Buffer size in bytes, can be expressed with SI suffix like 64k for 64*1024 bytes
     #[cli_settings_default = "\"4k\".parse().expect(\"constant\")"]
     #[cli_settings_file]
-    #[cli_settings_clap = "#[arg(short, long, value_name=\"SIZE\")]"]
+    #[cli_settings_clap = "#[arg(short, long, value_name=\"SIZE\", global = true)]"]
     pub buffer_size: MemSize,
 
     /// alpha setting explanation
@@ -84,7 +84,7 @@ pub struct Settings {
 
     /// beta setting explanation, settable only from command line
     #[cli_settings_default = "\"beta default value\".to_string()"]
-    #[cli_settings_clap = "#[arg(long)]"]
+    #[cli_settings_clap = "#[arg(long, global = true)]"]
     pub beta: String,
 
     /// gamma setting explanation, settable only from config file
@@ -94,7 +94,7 @@ pub struct Settings {
 
     /// choose home planet
     #[cli_settings_default = "Planet::Earth"]
-    #[cli_settings_clap = "#[arg(short, long)]"]
+    #[cli_settings_clap = "#[arg(short, long, global = true)]"]
     #[cli_settings_file]
     pub planet: Planet,
 
