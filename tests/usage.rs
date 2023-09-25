@@ -68,7 +68,7 @@ pub fn build() -> anyhow::Result<()> {
             test_dir.join("usage-does-not-exist.yml"),
             test_dir.join("usage2.yml"),
         ],
-        &["test-bin", "--beta=something", "-e", "1024"],
+        ["test-bin", "--beta=something", "-e", "1024"],
     )?;
     assert_eq!(cfg, expected);
     Ok(())

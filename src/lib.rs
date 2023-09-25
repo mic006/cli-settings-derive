@@ -374,6 +374,19 @@ impl<'a> SettingStruct<'a> {
 /// - In your application code, call the Settings::build() method with the list of config files to read
 ///   and the command line arguments to get your application configuration.
 ///
+/// ### Enumerations
+///
+/// A custom enum can be used in the configuration struct. Add the following annotations to the enum declaration:
+/// - `#[derive(clap::ValueEnum, Clone, Debug)]` for command line argument parsing
+/// - `#[derive(serde::Deserialize)]#[serde(rename_all = "lowercase")]` for config file parsing
+///
+/// Also an external enum can be used in the configuration struct. As annotations are not possible on this
+/// external enum, the solution is to use a custom parsing function:
+/// - command line argument parsing
+///   - define the parsing function, with signature `fn parse_field(input: &str) -> Result<FieldType, &'static str>
+///   - annotate the field to use the parsing function as value_parser: `#[cli_settings_clap = "#[arg(short, long, value_parser = parse_field)]"]
+/// - config file parsing: use `serde_with` with the following annotation `#[cli_settings_file = "#[serde_as(as = \"Option<serde_with::DisplayFromStr>\")]"]`
+///
 /// ### Clap mandatory arguments
 ///
 /// Clap mandatory arguments shall get the extra annotation `#[cli_settings_mandatory]`.
@@ -385,14 +398,17 @@ impl<'a> SettingStruct<'a> {
 ///
 /// Clap subcommands are supported as mandatory arguments, as shown in the example from the repository.
 ///
-/// ## Example
+/// Note: set `global = true` for fields of the first level parameters that apply to all subcommands,
+/// so that parameters can be passed before and after the subcommand.
+///
+/// ## Basic example
 ///
 /// ```
 /// use cli_settings_derive::cli_settings;
 ///
 /// #[cli_settings]
 /// #[cli_settings_file = "#[serde_with::serde_as]#[derive(serde::Deserialize)]"]
-/// #[cli_settings_clap = "#[derive(clap::Parser)]#[command(version, about)]"]
+/// #[cli_settings_clap = "#[derive(clap::Parser)]#[command(version)]"]
 /// pub struct Settings {
 ///     /// alpha setting explanation
 ///     #[cli_settings_file]
@@ -422,9 +438,13 @@ impl<'a> SettingStruct<'a> {
 /// }
 /// ```
 ///
+/// ## Complete example
+///
 /// A more complex example is available in the [crate repository](https://github.com/mic006/cli-settings-derive/blob/main/examples/example.rs), with:
 /// - clap settings to tune the generated help message (-h)
 /// - field with custom type and user provided function to parse the value from string
+/// - local enumeration field
+/// - external enumeration field
 /// - clap subcommands
 ///
 #[proc_macro_attribute]
