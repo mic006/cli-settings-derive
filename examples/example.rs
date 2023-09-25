@@ -3,7 +3,7 @@
 use cli_settings_derive::cli_settings;
 
 /// Type for custom field, with custom parsing
-#[derive(Default, PartialEq, Debug, Clone, serde_with::DeserializeFromStr)]
+#[derive(Debug, Clone, serde_with::DeserializeFromStr)]
 pub struct MemSize {
     pub nb: u64,
 }

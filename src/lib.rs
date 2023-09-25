@@ -374,18 +374,32 @@ impl<'a> SettingStruct<'a> {
 /// - In your application code, call the Settings::build() method with the list of config files to read
 ///   and the command line arguments to get your application configuration.
 ///
+/// ### User-defined struct
+///
+/// A user-defined struct can be used as a field in the configuration struct.
+/// It shall:
+/// - be annotated with `#[derive(Debug, Clone)]` for command line argument parsing
+/// - be annotated with `#[derive(Debug, serde_with::DeserializeFromStr)]` for config file parsing
+/// - implement `std::str::FromStr`, method `from_str()` to generate an object instance from the argument string
+///
 /// ### Enumerations
 ///
-/// A custom enum can be used in the configuration struct. Add the following annotations to the enum declaration:
+/// #### User-defined enumeration
+///
+/// A user-defined enum can be used as a field in the configuration struct. Add the following annotations to the enum declaration:
 /// - `#[derive(clap::ValueEnum, Clone, Debug)]` for command line argument parsing
 /// - `#[derive(serde::Deserialize)]#[serde(rename_all = "lowercase")]` for config file parsing
 ///
-/// Also an external enum can be used in the configuration struct. As annotations are not possible on this
+/// #### External enumeration
+///
+/// An external enum can be used as a field in the configuration struct. As annotations are not possible on this
 /// external enum, the solution is to use a custom parsing function:
 /// - command line argument parsing
-///   - define the parsing function, with signature `fn parse_field(input: &str) -> Result<FieldType, &'static str>
-///   - annotate the field to use the parsing function as value_parser: `#[cli_settings_clap = "#[arg(short, long, value_parser = parse_field)]"]
+///   - define the parsing function, with signature `fn parse_field(input: &str) -> Result<FieldType, &'static str>`
+///   - annotate the field to use the parsing function as value_parser: `#[cli_settings_clap = "#[arg(short, long, value_parser = parse_field)]"]`
 /// - config file parsing: use `serde_with` with the following annotation `#[cli_settings_file = "#[serde_as(as = \"Option<serde_with::DisplayFromStr>\")]"]`
+///
+/// An alternate solution is to wrap the external enumeration in a user-defined struct, as described above.
 ///
 /// ### Clap mandatory arguments
 ///

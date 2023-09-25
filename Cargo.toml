@@ -1,6 +1,6 @@
 [package]
 name = "cli-settings-derive"
-version = "0.2.1"
+version = "0.2.2"
 edition = "2021"
 description = "Manage CLI settings with configuration file(s) and command line parsing, using serde and clap"
 documentation = "https://docs.rs/cli-settings-derive"
