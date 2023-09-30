@@ -343,6 +343,8 @@ impl<'a> SettingStruct<'a> {
     }
 }
 
+/// Macro to use on the Command Line Interface settings struct
+///
 /// # Description
 ///
 /// Use a derive macro with annotations on your Command Line Interface settings struct
