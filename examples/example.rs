@@ -4,9 +4,7 @@ use cli_settings_derive::cli_settings;
 
 /// Type for custom field, with custom parsing
 #[derive(Debug, Clone, serde_with::DeserializeFromStr)]
-pub struct MemSize {
-    pub nb: u64,
-}
+pub struct MemSize(u64);
 
 /// Convert memory size from string with optional SI prefix to a value (kibi mode)
 impl std::str::FromStr for MemSize {
@@ -48,7 +46,7 @@ impl std::str::FromStr for MemSize {
             value <<= 10 * si_unit;
         }
 
-        Ok(Self { nb: value })
+        Ok(Self(value))
     }
 }
 
