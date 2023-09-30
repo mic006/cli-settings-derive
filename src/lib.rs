@@ -2,7 +2,6 @@
 
 use std::str::FromStr;
 
-use let_or_return::let_or_return;
 use quote::{quote, ToTokens};
 use syn::{parse_macro_input, spanned::Spanned};
 
@@ -40,13 +39,12 @@ impl<'a> SettingStruct<'a> {
             fields: vec![],
         };
 
-        let_or_return!(
-            syn::Fields::Named(fields) = &s.fields,
-            Err(syn::Error::new(
+        let syn::Fields::Named(fields) = &s.fields else {
+            return Err(syn::Error::new(
                 s.span(),
-                "only named structs are supported"
-            ))
-        );
+                "only named structs are supported",
+            ));
+        };
 
         // struct attributes
         ss.attrs = Self::classify_attributes(&s.attrs)?;
