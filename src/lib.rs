@@ -126,7 +126,11 @@ impl<'a> SettingStruct<'a> {
             .iter()
             .map(|k| self.attrs.get(*k).unwrap_or(&empty))
             .collect::<Vec<_>>();
-        let vis = &self.s.vis;
+        let vis = if prefix.is_empty() {
+            self.s.vis.to_token_stream()
+        } else {
+            empty.clone()
+        };
         let struct_token = &self.s.struct_token;
         let name = format!("{}{}", prefix, self.s.ident);
         let ident = syn::Ident::new(&name, self.s.ident.span());

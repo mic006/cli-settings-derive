@@ -43,7 +43,7 @@ mod _cli_settings_derive {
     use clap::Parser;
     use super::*;
     #[serde_with::serde_as]
-    pub struct FileSettings {
+    struct FileSettings {
         pub alpha: Option<u32>,
         pub gamma: Option<u64>,
     }
@@ -97,7 +97,7 @@ mod _cli_settings_derive {
     ///
     /// Application long description (visible with --help)
     #[command(version)]
-    pub struct ClapSettings {
+    struct ClapSettings {
         /// alpha setting explanation
         #[arg(long)]
         pub alpha: Option<u32>,
