@@ -126,7 +126,11 @@ impl<'a> SettingStruct<'a> {
             .iter()
             .map(|k| self.attrs.get(*k).unwrap_or(&empty))
             .collect::<Vec<_>>();
-        let vis = &self.s.vis;
+        let vis = if prefix.is_empty() {
+            self.s.vis.to_token_stream()
+        } else {
+            empty.clone()
+        };
         let struct_token = &self.s.struct_token;
         let name = format!("{}{}", prefix, self.s.ident);
         let ident = syn::Ident::new(&name, self.s.ident.span());
@@ -339,6 +343,24 @@ impl<'a> SettingStruct<'a> {
             }
         }
     }
+
+    /// Output parse_cli_args() function
+    fn output_clap_test(&self) -> proc_macro2::TokenStream {
+        let name = format!("Clap{}", self.s.ident);
+        let ident = syn::Ident::new(&name, self.s.ident.span());
+        quote! {
+            #[cfg(test)]
+            mod tests {
+                use super::*;
+
+                #[test]
+                fn verify_cli() {
+                    use clap::CommandFactory;
+                    #ident ::command().debug_assert()
+                }
+            }
+        }
+    }
 }
 
 /// Macro to use on the Command Line Interface settings struct
@@ -481,6 +503,7 @@ pub fn cli_settings(
     let clap_struct = ss.output_clap_struct();
     let clap_struct_update = ss.output_clap_struct_update();
     let parse_cli_args = ss.output_parse_cli_args();
+    let clap_test = ss.output_clap_test();
 
     quote! {
         #main_struct
@@ -501,6 +524,8 @@ pub fn cli_settings(
             #clap_struct_update
 
             #parse_cli_args
+
+            #clap_test
         }
     }
     .into()
