@@ -2,5 +2,6 @@
 
 #[test]
 pub fn pass() {
-    macrotest::expand("tests/expand/*.rs");
+    // generate with test code
+    macrotest::expand_args("tests/expand/*.rs", &["--tests"]);
 }

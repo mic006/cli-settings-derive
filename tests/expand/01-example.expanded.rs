@@ -127,4 +127,38 @@ mod _cli_settings_derive {
         cli_args.update(cfg);
         Ok(())
     }
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+        extern crate test;
+        #[cfg(test)]
+        #[rustc_test_marker = "_cli_settings_derive::tests::verify_cli"]
+        pub const verify_cli: test::TestDescAndFn = test::TestDescAndFn {
+            desc: test::TestDesc {
+                name: test::StaticTestName("_cli_settings_derive::tests::verify_cli"),
+                ignore: false,
+                ignore_message: ::core::option::Option::None,
+                source_file: "/data/develop/github/cli-settings-derive/tests/expand/01-example.rs",
+                start_line: 7usize,
+                start_col: 1usize,
+                end_line: 7usize,
+                end_col: 16usize,
+                compile_fail: false,
+                no_run: false,
+                should_panic: test::ShouldPanic::No,
+                test_type: test::TestType::Unknown,
+            },
+            testfn: test::StaticTestFn(|| test::assert_test_result(verify_cli())),
+        };
+        fn verify_cli() {
+            use clap::CommandFactory;
+            ClapSettings::command().debug_assert()
+        }
+    }
+}
+#[rustc_main]
+#[no_coverage]
+pub fn main() -> () {
+    extern crate test;
+    test::test_main_static(&[&verify_cli])
 }
