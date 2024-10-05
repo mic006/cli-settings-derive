@@ -1,4 +1,6 @@
-//! Test usage of cli_settings with a simple but exhaustive example
+//! Test usage of `cli_settings` with a simple but exhaustive example
+
+#![allow(clippy::missing_errors_doc, clippy::missing_panics_doc)]
 
 #[macro_use]
 extern crate cli_settings_derive;
@@ -34,7 +36,7 @@ pub struct Settings {
     pub epsilon: u32,
 }
 
-/// Test default() method
+/// Test `default()` method
 #[test]
 pub fn default() {
     let expected = Settings {
@@ -47,7 +49,7 @@ pub fn default() {
     assert_eq!(Settings::default(), expected);
 }
 
-/// Test build() method
+/// Test `build()` method
 /// Load several files, then command line arguments, and check that the overall config is the expected one
 #[test]
 pub fn build() -> anyhow::Result<()> {

@@ -1,4 +1,4 @@
-//! Example of cli_settings usage.
+//! Example of `cli_settings` usage.
 
 #![allow(dead_code)]
 

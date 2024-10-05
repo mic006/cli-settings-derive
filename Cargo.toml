@@ -28,3 +28,24 @@ syn = "2.0.79"
 log = "0.4.22"
 macrotest = "1.0.13"
 syn = { version = "2.0.79", features = ["full", "extra-traits"] }
+
+[lints.rust]
+warnings = "warn"
+future-incompatible = "warn"
+let-underscore = "warn"
+nonstandard-style = "warn"
+rust-2018-idioms = "warn"
+unused = { level = "warn", priority = -1 }
+unsafe_code = "deny"
+dead_code = "deny"
+
+[lints.clippy]
+all = { level = "deny", priority = -1 }
+pedantic = { level = "deny", priority = -1 }
+cargo = { level = "deny", priority = -1 }
+# disable some **too** pedantic lints
+module_name_repetitions = "allow"
+needless_pass_by_value = "allow"
+similar_names = "allow"
+needless_doctest_main = "allow"
+multiple_crate_versions = "allow"
