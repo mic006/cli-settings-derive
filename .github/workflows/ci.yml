@@ -14,9 +14,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
-      - name: Install nightly for cargo-expand to work
-        run: rustup toolchain install nightly
+      - uses: actions/checkout@v4
+      - name: Install latest rust stable
+        run: rustup update stable && rustup default stable
       - name: Install cargo-expand
         run: cargo install cargo-expand
       - name: Build

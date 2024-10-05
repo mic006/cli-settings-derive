@@ -6,15 +6,15 @@ use quote::{quote, ToTokens};
 use syn::{parse_macro_input, spanned::Spanned};
 
 /// Map of attributes by category
-/// 'cli_settings_default': default field value
-/// 'cli_settings_file': config file related attributes
-/// 'cli_settings_clap': command line related attributes
-/// 'cli_settings_mandatory': indicate a mandatory CLI argument (presence/absence only, no associated value)
+/// `cli_settings_default`: default field value
+/// `cli_settings_file`: config file related attributes
+/// `cli_settings_clap`: command line related attributes
+/// `cli_settings_mandatory`: indicate a mandatory CLI argument (presence/absence only, no associated value)
 /// 'doc': doc related attributes
 /// '_': other attributes
 type AttrMap = std::collections::HashMap<String, proc_macro2::TokenStream>;
 
-/// Field element, quite similar to syn::Field, keeping only the relevant fields
+/// Field element, quite similar to `syn::Field`, keeping only the relevant fields
 struct Field<'a> {
     attrs: AttrMap,           // classified attributes of the field
     vis: &'a syn::Visibility, // field visibility
@@ -31,11 +31,11 @@ struct SettingStruct<'a> {
 }
 
 impl<'a> SettingStruct<'a> {
-    /// Build SettingStruct from a syn::ItemStruct
+    /// Build `SettingStruct` from a `syn::ItemStruct`
     fn build(s: &'a syn::ItemStruct) -> Result<Self, syn::Error> {
         let mut ss = Self {
             s,
-            attrs: Default::default(),
+            attrs: AttrMap::default(),
             fields: vec![],
         };
 
@@ -70,8 +70,9 @@ impl<'a> SettingStruct<'a> {
 
     /// Classify a list of attributes, related to file , clap, or other
     fn classify_attributes(attrs: &'a Vec<syn::Attribute>) -> Result<AttrMap, syn::Error> {
-        let mut res: AttrMap = Default::default();
+        let mut res = AttrMap::default();
         for attr in attrs {
+            #[allow(clippy::match_wildcard_for_single_variants)]
             let (path, value) = match &attr.meta {
                 syn::Meta::Path(p) => (Some(p), None),
                 syn::Meta::NameValue(v) => (Some(&v.path), Some(&v.value)),
@@ -224,7 +225,7 @@ impl<'a> SettingStruct<'a> {
         }
     }
 
-    /// Output build() implementation for the main struct
+    /// Output `build()` implementation for the main struct
     fn output_main_struct_build(&self) -> proc_macro2::TokenStream {
         let ident = &self.s.ident;
         quote! {
@@ -246,7 +247,7 @@ impl<'a> SettingStruct<'a> {
         }
     }
 
-    /// Output update() implementation for the file struct
+    /// Output `update()` implementation for the file struct
     fn output_struct_update(&self, prefix: &str, field_filter: &str) -> proc_macro2::TokenStream {
         let main_ident = &self.s.ident;
         let name = format!("{}{}", prefix, self.s.ident);
@@ -279,16 +280,16 @@ impl<'a> SettingStruct<'a> {
             }
         }
     }
-    /// Output the file struct update()
+    /// Output the file struct `update()`
     fn output_file_struct_update(&self) -> proc_macro2::TokenStream {
         self.output_struct_update("File", "cli_settings_file")
     }
-    /// Output the clap struct update()
+    /// Output the clap struct `update()`
     fn output_clap_struct_update(&self) -> proc_macro2::TokenStream {
         self.output_struct_update("Clap", "cli_settings_clap")
     }
 
-    /// Output load_file() function
+    /// Output `load_file()` function
     fn output_load_file(&self) -> proc_macro2::TokenStream {
         let main_ident = &self.s.ident;
         let name = format!("File{}", self.s.ident);
@@ -326,7 +327,7 @@ impl<'a> SettingStruct<'a> {
         }
     }
 
-    /// Output parse_cli_args() function
+    /// Output `parse_cli_args()` function
     fn output_parse_cli_args(&self) -> proc_macro2::TokenStream {
         let main_ident = &self.s.ident;
         let name = format!("Clap{}", self.s.ident);
@@ -344,7 +345,7 @@ impl<'a> SettingStruct<'a> {
         }
     }
 
-    /// Output parse_cli_args() function
+    /// Output `parse_cli_args()` function
     fn output_clap_test(&self) -> proc_macro2::TokenStream {
         let name = format!("Clap{}", self.s.ident);
         let ident = syn::Ident::new(&name, self.s.ident.span());
@@ -393,7 +394,7 @@ impl<'a> SettingStruct<'a> {
 ///   - `#[cli_settings_clap = "xxx"]` to indicate that the field shall be a command line argument.
 ///     The passed string (if any) will be extra annotation(s) to the command line parsing struct.
 /// - For each field, provide documentation (with ///) to generate the help message via clap.
-/// - In your application code, call the Settings::build() method with the list of config files to read
+/// - In your application code, call the `Settings::build()` method with the list of config files to read
 ///   and the command line arguments to get your application configuration.
 ///
 /// ### User-defined struct
@@ -418,7 +419,7 @@ impl<'a> SettingStruct<'a> {
 /// external enum, the solution is to use a custom parsing function:
 /// - command line argument parsing
 ///   - define the parsing function, with signature `fn parse_field(input: &str) -> Result<FieldType, &'static str>`
-///   - annotate the field to use the parsing function as value_parser: `#[cli_settings_clap = "#[arg(short, long, value_parser = parse_field)]"]`
+///   - annotate the field to use the parsing function as `value_parser`: `#[cli_settings_clap = "#[arg(short, long, value_parser = parse_field)]"]`
 /// - config file parsing: use `serde_with` with the following annotation `#[cli_settings_file = "#[serde_as(as = \"Option<serde_with::DisplayFromStr>\")]"]`
 ///
 /// An alternate solution is to wrap the external enumeration in a user-defined struct, as described above.
@@ -462,7 +463,7 @@ impl<'a> SettingStruct<'a> {
 ///     pub gamma: u64,
 /// }
 ///
-/// fn main_func() {
+/// fn main() {
 ///     // Get the application configuration
 ///     let cfg = Settings::build(
 ///         vec![
