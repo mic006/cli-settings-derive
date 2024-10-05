@@ -1,6 +1,6 @@
 [package]
 name = "cli-settings-derive"
-version = "0.3.0"
+version = "0.3.1"
 edition = "2021"
 description = "Manage CLI settings with configuration file(s) and command line parsing, using serde and clap"
 documentation = "https://docs.rs/cli-settings-derive"
@@ -13,16 +13,18 @@ repository = "https://github.com/mic006/cli-settings-derive"
 proc-macro = true
 
 [dependencies]
-anyhow = "1.0.75"
-clap = { version = "4.4.4", features = ["derive"] }
-proc-macro2 = "1.0.67"
-quote = "1.0.33"
-serde = { version = "1.0.188", features = ["derive"] }
-serde_with = "3.3.0"
-serde_yaml = "0.9.25"
-syn = "2.0.37"
+anyhow = "1.0.89"
+clap = { version = "4.5.19", features = ["derive"] }
+proc-macro2 = "1.0.86"
+quote = "1.0.37"
+serde = { version = "1.0.210", features = ["derive"] }
+serde_with = { version = "3.10.0", default-features = false, features = [
+    "macros",
+] }
+serde_yaml = "0.9.34"
+syn = "2.0.79"
 
 [dev-dependencies]
-log = "0.4.20"
-macrotest = "1.0.9"
-syn = { version = "2.0.37", features = ["full", "extra-traits"] }
+log = "0.4.22"
+macrotest = "1.0.13"
+syn = { version = "2.0.79", features = ["full", "extra-traits"] }

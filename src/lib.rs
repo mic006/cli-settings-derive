@@ -61,7 +61,7 @@ impl<'a> SettingStruct<'a> {
                 ty: &field.ty,
                 opt: false,
             };
-            f.opt = f.attrs.get("cli_settings_mandatory").is_none();
+            f.opt = !f.attrs.contains_key("cli_settings_mandatory");
             ss.fields.push(f);
         }
 
@@ -462,7 +462,7 @@ impl<'a> SettingStruct<'a> {
 ///     pub gamma: u64,
 /// }
 ///
-/// fn main() {
+/// fn main_func() {
 ///     // Get the application configuration
 ///     let cfg = Settings::build(
 ///         vec![
