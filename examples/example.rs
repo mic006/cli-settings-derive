@@ -1,5 +1,7 @@
 //! Example of cli_settings usage.
 
+#![allow(dead_code)]
+
 use cli_settings_derive::cli_settings;
 
 /// Type for custom field, with custom parsing
@@ -145,6 +147,6 @@ fn main() -> anyhow::Result<()> {
         std::env::args_os(),
     )?;
 
-    println!("{:#?}", cfg);
+    println!("{cfg:#?}");
     Ok(())
 }
